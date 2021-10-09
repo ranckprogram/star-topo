@@ -193,6 +193,16 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
     console.log(_assertThisInitialized(_this));
     return _this;
   }
+  /**
+   * 重新提笔的逻辑，只有在active情况才触发，不然会降低批量渲染的性能
+   * - 有什么办法可以减少提笔hover ctx调用次数问题
+   *   - 链表，但链表的遍历速度如何呢？
+   *   - js运算或者worker运算比直接ctx性能更高
+   *
+   * @param {*} ctx
+   * @memberof DeviceNode
+   */
+
 
   _createClass(DeviceNode, [{
     key: "render",
@@ -202,6 +212,16 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
       ctx.lineTo(this.width, this.y + this.height);
       ctx.lineTo(this.x, this.y + this.height);
       ctx.lineTo(this.x, this.y);
+
+      if (this.active) {
+        ctx.strokeStyle = "#f80";
+        ctx.stroke();
+        ctx.beginPath();
+      } else {
+        ctx.strokeStyle = "#333";
+        ctx.stroke();
+        ctx.beginPath();
+      }
     }
   }]);
 
@@ -209,10 +229,66 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
 }(_Node2.default);
 
 exports.default = DeviceNode;
-},{"./Node":"src/nodes/Node.js"}],"index.js":[function(require,module,exports) {
+},{"./Node":"src/nodes/Node.js"}],"src/core/Transform.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Transform = function Transform() {
+  var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  var scale = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+
+  _classCallCheck(this, Transform);
+
+  this.x = x;
+  this.y = y;
+  this.scale = scale;
+};
+
+exports.default = Transform;
+},{}],"src/utils/hoverCheck.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = hoverCheck;
+
+function hoverCheck(e, nodes) {
+  var offsetX = e.offsetX,
+      offsetY = e.offsetY;
+
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+
+    if (node.x < offsetX && node.x + node.width > offsetX && node.y < offsetY && node.y + node.height > offsetY) {
+      node.active = true;
+      document.body.style.cursor = "pointer";
+
+      if (i > 0) {
+        nodes[i - 1].active = false;
+      } // break
+
+    } else {
+      node.active = false;
+      document.body.style.cursor = "default";
+    }
+  }
+}
+},{}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _DeviceNode = _interopRequireDefault(require("./src/nodes/DeviceNode"));
+
+var _Transform = _interopRequireDefault(require("./src/core/Transform"));
+
+var _hoverCheck = _interopRequireDefault(require("./src/utils/hoverCheck"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -228,37 +304,32 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-console.log(1);
-
 var StarTopo = /*#__PURE__*/function () {
   function StarTopo(el) {
+    var _this = this;
+
     _classCallCheck(this, StarTopo);
 
     this.el = document.querySelector(el);
     this.nodes = [];
     this.edges = [];
-    this.el.addEventListener("mousemove", this.mousemove);
+    this.transform = new _Transform.default();
+    this.el.addEventListener("mousemove", function (e) {
+      return _this.mousemove(e);
+    });
     this.render();
   }
 
   _createClass(StarTopo, [{
     key: "mousemove",
     value: function mousemove(e) {
-      console.log(e);
-      var offsetX = e.offsetX,
-          offsetY = e.offsetY;
+      (0, _hoverCheck.default)(e, this.nodes);
+      this.render();
     }
   }, {
     key: "addNode",
-    value: function addNode() {
+    value: function addNode(node) {
       // 自己定义设备，类型注册，创建设备节点，传入类型和参数
-      var node = new _DeviceNode.default({
-        id: "id",
-        x: 20,
-        y: 20,
-        width: 120,
-        height: 30
-      });
       this.nodes.push(node);
     }
   }, {
@@ -270,15 +341,15 @@ var StarTopo = /*#__PURE__*/function () {
       var nodes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.nodes;
       var canvas = this.el;
       var ctx = canvas.getContext("2d");
-      console.log(ctx);
 
       var _iterator = _createForOfIteratorHelper(nodes),
           _step;
 
       try {
         for (_iterator.s(); !(_step = _iterator.n()).done;) {
-          var node = _step.value;
-          node.render(ctx);
+          var _node = _step.value;
+
+          _node.render(ctx);
         }
       } catch (err) {
         _iterator.e(err);
@@ -295,9 +366,23 @@ var StarTopo = /*#__PURE__*/function () {
 
 var topo = new StarTopo("#canvas");
 console.log(topo);
-topo.addNode();
+var node = new _DeviceNode.default({
+  id: "id",
+  x: 20,
+  y: 20,
+  width: 120,
+  height: 30
+});
+topo.addNode(node);
+topo.addNode(new _DeviceNode.default({
+  id: "i4d",
+  x: 100,
+  y: 40,
+  width: 220,
+  height: 30
+}));
 topo.render();
-},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js","./src/core/Transform":"src/core/Transform.js","./src/utils/hoverCheck":"src/utils/hoverCheck.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -325,7 +410,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "60486" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49709" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
