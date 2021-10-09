@@ -371,6 +371,8 @@ var Firewall = /*#__PURE__*/function (_DeviceNode) {
         ctx.drawImage(img, x, y, imageWidth, imageHeight);
         ctx.font = "12px serif";
         ctx.fillText(name, x, textTop);
+        ctx.fillStyle = "#333";
+        ctx.fillText(name, x, textTop);
         ctx.fillText(info, x, textTop + 10 + 12);
       };
     }
@@ -380,7 +382,66 @@ var Firewall = /*#__PURE__*/function (_DeviceNode) {
 }(_DeviceNode2.default);
 
 exports.default = Firewall;
-},{"../nodes/DeviceNode":"src/nodes/DeviceNode.js","../assets/images/*.png":"src/assets/images/*.png"}],"index.js":[function(require,module,exports) {
+},{"../nodes/DeviceNode":"src/nodes/DeviceNode.js","../assets/images/*.png":"src/assets/images/*.png"}],"src/utils/boundaryCheck.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = boundaryCheck;
+
+function boundaryCheck(e, node) {
+  var offsetX = e.offsetX,
+      offsetY = e.offsetY;
+
+  if (node.x < offsetX && node.x + node.width > offsetX && node.y < offsetY && node.y + node.height > offsetY) {
+    return true;
+  } else {
+    return false;
+  }
+}
+},{}],"src/utils/move.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = move;
+
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _iterableToArrayLimit(arr, i) { if (typeof Symbol === "undefined" || !(Symbol.iterator in Object(arr))) return; var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
+function move(e, nodes, originPosition) {
+  var _originPosition = originPosition,
+      _originPosition2 = _slicedToArray(_originPosition, 2),
+      a = _originPosition2[0],
+      b = _originPosition2[1];
+
+  var offsetX = e.offsetX,
+      offsetY = e.offsetY;
+  var vectorX = offsetX - a;
+  var vectorY = offsetY - b;
+  originPosition = [vectorX, vectorY];
+
+  for (var i = 0; i < nodes.length; i++) {
+    if (nodes[i].isSelect) {
+      nodes[i]._x = nodes[i]._x || nodes[i].x;
+      nodes[i]._y = nodes[i]._y || nodes[i].y;
+      nodes[i].x = vectorX + nodes[i]._x;
+      nodes[i].y = vectorY + nodes[i]._y;
+    }
+  }
+}
+},{}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _DeviceNode = _interopRequireDefault(require("./src/nodes/DeviceNode"));
@@ -390,6 +451,10 @@ var _Transform = _interopRequireDefault(require("./src/core/Transform"));
 var _hoverCheck = _interopRequireDefault(require("./src/utils/hoverCheck"));
 
 var _Firewall = _interopRequireDefault(require("./src/components/Firewall"));
+
+var _boundaryCheck = _interopRequireDefault(require("./src/utils/boundaryCheck"));
+
+var _move = _interopRequireDefault(require("./src/utils/move"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -414,9 +479,21 @@ var StarTopo = /*#__PURE__*/function () {
     this.el = document.querySelector(el);
     this.nodes = [];
     this.edges = [];
+    this.annotations = [];
     this.transform = new _Transform.default();
+    this.originPosition = [0, 0];
+    this.isPress = false;
     this.el.addEventListener("mousemove", function (e) {
       return _this.mousemove(e);
+    });
+    this.el.addEventListener("mouseleave", function (e) {
+      return _this.mouseleave(e);
+    });
+    this.el.addEventListener("mousedown", function (e) {
+      return _this.mousedown(e);
+    });
+    this.el.addEventListener("mouseup", function (e) {
+      return _this.mouseup(e);
     });
     this.render();
   }
@@ -425,7 +502,44 @@ var StarTopo = /*#__PURE__*/function () {
     key: "mousemove",
     value: function mousemove(e) {
       (0, _hoverCheck.default)(e, this.nodes);
+
+      if (this.isPress) {
+        (0, _move.default)(e, this.nodes, this.originPosition);
+      }
+
       this.render();
+    }
+  }, {
+    key: "mouseleave",
+    value: function mouseleave(e) {
+      this.mouseup();
+    }
+  }, {
+    key: "mousedown",
+    value: function mousedown(e) {
+      this.isPress = true;
+      var offsetX = e.offsetX,
+          offsetY = e.offsetY;
+      this.originPosition = [offsetX, offsetY];
+
+      for (var i = 0; i < this.nodes.length; i++) {
+        var isPress = (0, _boundaryCheck.default)(e, this.nodes[i]);
+        this.nodes[i].isSelect = isPress;
+      }
+
+      console.log(this.nodes);
+    }
+  }, {
+    key: "mouseup",
+    value: function mouseup(e) {
+      this.isPress = false;
+      this.originPosition = [0, 0];
+
+      for (var i = 0; i < this.nodes.length; i++) {
+        this.nodes[i].isPress = false;
+        this.nodes[i]._x = 0;
+        this.nodes[i]._y = 0;
+      }
     }
   }, {
     key: "addNode",
@@ -437,6 +551,9 @@ var StarTopo = /*#__PURE__*/function () {
     key: "removeNode",
     value: function removeNode() {}
   }, {
+    key: "destroy",
+    value: function destroy() {}
+  }, {
     key: "render",
     value: function render() {
       var nodes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.nodes;
@@ -444,6 +561,8 @@ var StarTopo = /*#__PURE__*/function () {
       var ctx = canvas.getContext("2d", {
         alpha: true
       });
+      ctx.fillStyle = "#ddd";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       var _iterator = _createForOfIteratorHelper(nodes),
           _step;
@@ -453,14 +572,13 @@ var StarTopo = /*#__PURE__*/function () {
           var _node = _step.value;
 
           _node.render(ctx);
-        }
+        } // ctx.stroke();
+
       } catch (err) {
         _iterator.e(err);
       } finally {
         _iterator.f();
       }
-
-      ctx.stroke();
     }
   }]);
 
@@ -503,7 +621,7 @@ topo.addNode(new _Firewall.default({
   info: "10.0.0.25犯得上发射点发射点犯得上"
 }));
 topo.render();
-},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js","./src/core/Transform":"src/core/Transform.js","./src/utils/hoverCheck":"src/utils/hoverCheck.js","./src/components/Firewall":"src/components/Firewall.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js","./src/core/Transform":"src/core/Transform.js","./src/utils/hoverCheck":"src/utils/hoverCheck.js","./src/components/Firewall":"src/components/Firewall.js","./src/utils/boundaryCheck":"src/utils/boundaryCheck.js","./src/utils/move":"src/utils/move.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -531,7 +649,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49709" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64140" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

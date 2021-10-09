@@ -2,22 +2,63 @@ import DeviceNode from "./src/nodes/DeviceNode";
 import Transform from "./src/core/Transform";
 import hoverCheck from "./src/utils/hoverCheck";
 import Firewall from "./src/components/Firewall";
+import boundaryCheck from "./src/utils/boundaryCheck";
+import moveNodes from "./src/utils/move";
 
 class StarTopo {
   constructor(el) {
     this.el = document.querySelector(el);
     this.nodes = [];
     this.edges = [];
+    this.annotations = [];
 
     this.transform = new Transform();
+    this.originPosition = [0, 0];
+
+    this.isPress = false;
 
     this.el.addEventListener("mousemove", (e) => this.mousemove(e));
+    this.el.addEventListener("mouseleave", (e) => this.mouseleave(e));
+    this.el.addEventListener("mousedown", (e) => this.mousedown(e));
+    this.el.addEventListener("mouseup", (e) => this.mouseup(e));
+
     this.render();
   }
 
   mousemove(e) {
     hoverCheck(e, this.nodes);
+
+    if (this.isPress) {
+      moveNodes(e, this.nodes, this.originPosition);
+    }
     this.render();
+  }
+
+  mouseleave(e) {
+    this.mouseup();
+  }
+
+  mousedown(e) {
+    this.isPress = true;
+    const { offsetX, offsetY } = e;
+    this.originPosition = [offsetX, offsetY];
+    for (let i = 0; i < this.nodes.length; i++) {
+      const isPress = boundaryCheck(e, this.nodes[i]);
+      this.nodes[i].isSelect = isPress;
+    }
+
+    console.log(this.nodes);
+  }
+
+  mouseup(e) {
+    this.isPress = false;
+
+    this.originPosition = [0, 0];
+    for (let i = 0; i < this.nodes.length; i++) {
+      this.nodes[i].isPress = false;
+      this.nodes[i]._x = 0;
+      this.nodes[i]._y = 0;
+    }
   }
 
   addNode(node) {
@@ -27,15 +68,20 @@ class StarTopo {
 
   removeNode() {}
 
+  destroy() {}
+
   render(nodes = this.nodes) {
     const canvas = this.el;
     const ctx = canvas.getContext("2d", { alpha: true });
+
+    ctx.fillStyle = "#ddd";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let node of nodes) {
       node.render(ctx);
     }
 
-    ctx.stroke();
+    // ctx.stroke();
   }
 }
 

@@ -18,6 +18,9 @@ export default class Firewall extends DeviceNode {
       ctx.drawImage(img, x, y, imageWidth, imageHeight);
       ctx.font = "12px serif";
       ctx.fillText(name, x, textTop);
+      ctx.fillStyle ="#333"
+
+      ctx.fillText(name, x, textTop);
       ctx.fillText(info, x, textTop + 10 + 12);
     };
   }
