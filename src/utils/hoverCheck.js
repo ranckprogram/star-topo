@@ -10,11 +10,7 @@ export default function hoverCheck(e, nodes) {
     ) {
       node.active = true;
       document.body.style.cursor = "pointer";
-
-      if (i > 0) {
-        nodes[i - 1].active = false;
-      }
-      // break
+      return
     } else {
       node.active = false;
       document.body.style.cursor = "default";

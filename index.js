@@ -17,6 +17,8 @@ class StarTopo {
 
     this.isPress = false;
 
+    this.raf = null; // 动画
+
     this.el.addEventListener("mousemove", (e) => this.mousemove(e));
     this.el.addEventListener("mouseleave", (e) => this.mouseleave(e));
     this.el.addEventListener("mousedown", (e) => this.mousedown(e));
@@ -26,12 +28,14 @@ class StarTopo {
   }
 
   mousemove(e) {
-    hoverCheck(e, this.nodes);
-
     if (this.isPress) {
       moveNodes(e, this.nodes, this.originPosition);
+    } else {
+      hoverCheck(e, this.nodes);
+
+      // 优化+1，鼠标如果没检测到碰撞，可以不调用渲染
+      this.render();
     }
-    this.render();
   }
 
   mouseleave(e) {
@@ -40,6 +44,7 @@ class StarTopo {
 
   mousedown(e) {
     this.isPress = true;
+    this.draw();
     const { offsetX, offsetY } = e;
     this.originPosition = [offsetX, offsetY];
     for (let i = 0; i < this.nodes.length; i++) {
@@ -52,6 +57,7 @@ class StarTopo {
 
   mouseup(e) {
     this.isPress = false;
+    window.cancelAnimationFrame(this.raf);
 
     this.originPosition = [0, 0];
     for (let i = 0; i < this.nodes.length; i++) {
@@ -69,6 +75,13 @@ class StarTopo {
   removeNode() {}
 
   destroy() {}
+
+  draw() {
+    if (this.isPress) {
+      this.render();
+      this.raf = window.requestAnimationFrame(() => this.draw());
+    }
+  }
 
   render(nodes = this.nodes) {
     const canvas = this.el;

@@ -284,11 +284,7 @@ function hoverCheck(e, nodes) {
     if (node.x < offsetX && node.x + node.width > offsetX && node.y < offsetY && node.y + node.height > offsetY) {
       node.active = true;
       document.body.style.cursor = "pointer";
-
-      if (i > 0) {
-        nodes[i - 1].active = false;
-      } // break
-
+      return;
     } else {
       node.active = false;
       document.body.style.cursor = "default";
@@ -348,13 +344,17 @@ var Firewall = /*#__PURE__*/function (_DeviceNode) {
     _classCallCheck(this, Firewall);
 
     _this = _super.call(this, props);
-    console.log(_.default);
+    var img = document.createElement("img");
+    img.src = _.default.concentrator;
+    _this.img = img;
     return _this;
   }
 
   _createClass(Firewall, [{
     key: "render",
     value: function render(ctx) {
+      var _this2 = this;
+
       var x = this.x,
           y = this.y,
           width = this.width,
@@ -363,18 +363,18 @@ var Firewall = /*#__PURE__*/function (_DeviceNode) {
           imageHeight = this.imageHeight,
           name = this.name,
           info = this.info;
-      var textTop = y + imageHeight + 10;
-      var img = document.createElement("img");
-      img.src = _.default.concentrator;
+      var textTop = y + imageHeight + 15;
 
-      img.onload = function () {
-        ctx.drawImage(img, x, y, imageWidth, imageHeight);
-        ctx.font = "12px serif";
-        ctx.fillText(name, x, textTop);
-        ctx.fillStyle = "#333";
-        ctx.fillText(name, x, textTop);
-        ctx.fillText(info, x, textTop + 10 + 12);
+      this.img.onload = function () {
+        ctx.drawImage(_this2.img, x, y, imageWidth, imageHeight);
       };
+
+      ctx.drawImage(this.img, x, y, imageWidth, imageHeight);
+      ctx.fillStyle = "#333";
+      ctx.font = "12px serif";
+      ctx.fillText(name, x, textTop);
+      ctx.fillText(name, x, textTop);
+      ctx.fillText(info, x, textTop + 10 + 12);
     }
   }]);
 
@@ -483,6 +483,8 @@ var StarTopo = /*#__PURE__*/function () {
     this.transform = new _Transform.default();
     this.originPosition = [0, 0];
     this.isPress = false;
+    this.raf = null; // 动画
+
     this.el.addEventListener("mousemove", function (e) {
       return _this.mousemove(e);
     });
@@ -501,13 +503,13 @@ var StarTopo = /*#__PURE__*/function () {
   _createClass(StarTopo, [{
     key: "mousemove",
     value: function mousemove(e) {
-      (0, _hoverCheck.default)(e, this.nodes);
-
       if (this.isPress) {
         (0, _move.default)(e, this.nodes, this.originPosition);
-      }
+      } else {
+        (0, _hoverCheck.default)(e, this.nodes); // 优化+1，鼠标如果没检测到碰撞，可以不调用渲染
 
-      this.render();
+        this.render();
+      }
     }
   }, {
     key: "mouseleave",
@@ -518,6 +520,7 @@ var StarTopo = /*#__PURE__*/function () {
     key: "mousedown",
     value: function mousedown(e) {
       this.isPress = true;
+      this.draw();
       var offsetX = e.offsetX,
           offsetY = e.offsetY;
       this.originPosition = [offsetX, offsetY];
@@ -533,6 +536,7 @@ var StarTopo = /*#__PURE__*/function () {
     key: "mouseup",
     value: function mouseup(e) {
       this.isPress = false;
+      window.cancelAnimationFrame(this.raf);
       this.originPosition = [0, 0];
 
       for (var i = 0; i < this.nodes.length; i++) {
@@ -553,6 +557,18 @@ var StarTopo = /*#__PURE__*/function () {
   }, {
     key: "destroy",
     value: function destroy() {}
+  }, {
+    key: "draw",
+    value: function draw() {
+      var _this2 = this;
+
+      if (this.isPress) {
+        this.render();
+        this.raf = window.requestAnimationFrame(function () {
+          return _this2.draw();
+        });
+      }
+    }
   }, {
     key: "render",
     value: function render() {
