@@ -1,6 +1,8 @@
 import DeviceNode from "./src/nodes/DeviceNode";
 import Transform from "./src/core/Transform";
 import hoverCheck from "./src/utils/hoverCheck";
+import Firewall from "./src/components/Firewall";
+
 class StarTopo {
   constructor(el) {
     this.el = document.querySelector(el);
@@ -12,13 +14,14 @@ class StarTopo {
     this.el.addEventListener("mousemove", (e) => this.mousemove(e));
     this.render();
   }
+
   mousemove(e) {
     hoverCheck(e, this.nodes);
     this.render();
   }
+
   addNode(node) {
     // 自己定义设备，类型注册，创建设备节点，传入类型和参数
-
     this.nodes.push(node);
   }
 
@@ -26,7 +29,7 @@ class StarTopo {
 
   render(nodes = this.nodes) {
     const canvas = this.el;
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: true });
 
     for (let node of nodes) {
       node.render(ctx);
@@ -46,6 +49,7 @@ const node = new DeviceNode({
   width: 120,
   height: 30,
 });
+
 topo.addNode(node);
 
 topo.addNode(
@@ -58,4 +62,27 @@ topo.addNode(
   })
 );
 
+topo.addNode(
+  new Firewall({
+    id: "firewall",
+    x: 300,
+    y: 80,
+    width: 80,
+    height: 100,
+    name: "防火墙",
+    info: "10.0.0.25",
+  })
+);
+
+topo.addNode(
+  new Firewall({
+    id: "firewall",
+    x: 300,
+    y: 180,
+    width: 80,
+    height: 100,
+    name: "防火墙sfdfsdfsdf阿三大苏打",
+    info: "10.0.0.25犯得上发射点发射点犯得上",
+  })
+);
 topo.render();

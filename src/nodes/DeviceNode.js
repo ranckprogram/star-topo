@@ -1,6 +1,6 @@
 import Node from "./Node";
 export default class DeviceNode extends Node {
-  constructor({ x, y, width, height }) {
+  constructor({ x, y, width, height, name, info }) {
     super();
     this.deviceType = "deviceType";
     this.width = width;
@@ -8,6 +8,15 @@ export default class DeviceNode extends Node {
     this.borderColor = "#333";
     this.x = x;
     this.y = y;
+
+    this.imageWidth = 80;
+    this.imageHeight = 30;
+
+    this.name = name;
+    this.info = info;
+
+    this.isDrag = false; // 被拖动
+    this.isSelect = false;
     console.log(this);
   }
   /**
@@ -20,11 +29,13 @@ export default class DeviceNode extends Node {
    * @memberof DeviceNode
    */
   render(ctx) {
-    ctx.moveTo(this.x, this.y);
-    ctx.lineTo(this.width, this.y);
-    ctx.lineTo(this.width, this.y + this.height);
-    ctx.lineTo(this.x, this.y + this.height);
-    ctx.lineTo(this.x, this.y);
+    const [a, b] = [this.x, this.y];
+    const [c, d] = [this.x + this.width, this.y + this.height];
+    ctx.moveTo(a, b);
+    ctx.lineTo(c, b);
+    ctx.lineTo(c, d);
+    ctx.lineTo(a, d);
+    ctx.lineTo(a, b);
 
     if (this.active) {
       ctx.strokeStyle = "#f80";

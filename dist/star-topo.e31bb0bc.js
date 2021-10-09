@@ -179,7 +179,9 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
     var x = _ref.x,
         y = _ref.y,
         width = _ref.width,
-        height = _ref.height;
+        height = _ref.height,
+        name = _ref.name,
+        info = _ref.info;
 
     _classCallCheck(this, DeviceNode);
 
@@ -190,6 +192,13 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
     _this.borderColor = "#333";
     _this.x = x;
     _this.y = y;
+    _this.imageWidth = 80;
+    _this.imageHeight = 30;
+    _this.name = name;
+    _this.info = info;
+    _this.isDrag = false; // 被拖动
+
+    _this.isSelect = false;
     console.log(_assertThisInitialized(_this));
     return _this;
   }
@@ -207,11 +216,16 @@ var DeviceNode = /*#__PURE__*/function (_Node) {
   _createClass(DeviceNode, [{
     key: "render",
     value: function render(ctx) {
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(this.width, this.y);
-      ctx.lineTo(this.width, this.y + this.height);
-      ctx.lineTo(this.x, this.y + this.height);
-      ctx.lineTo(this.x, this.y);
+      var _ref2 = [this.x, this.y],
+          a = _ref2[0],
+          b = _ref2[1];
+      var c = this.x + this.width,
+          d = this.y + this.height;
+      ctx.moveTo(a, b);
+      ctx.lineTo(c, b);
+      ctx.lineTo(c, d);
+      ctx.lineTo(a, d);
+      ctx.lineTo(a, b);
 
       if (this.active) {
         ctx.strokeStyle = "#f80";
@@ -281,7 +295,92 @@ function hoverCheck(e, nodes) {
     }
   }
 }
-},{}],"index.js":[function(require,module,exports) {
+},{}],"src/assets/images/concentrator.png":[function(require,module,exports) {
+module.exports = "/concentrator.3b59fbbe.png";
+},{}],"src/assets/images/*.png":[function(require,module,exports) {
+module.exports = {
+  "concentrator": require("./concentrator.png")
+};
+},{"./concentrator.png":"src/assets/images/concentrator.png"}],"src/components/Firewall.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _DeviceNode2 = _interopRequireDefault(require("../nodes/DeviceNode"));
+
+var _ = _interopRequireDefault(require("../assets/images/*.png"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); if (superClass) _setPrototypeOf(subClass, superClass); }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
+
+function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } return _assertThisInitialized(self); }
+
+function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Date.prototype.toString.call(Reflect.construct(Date, [], function () {})); return true; } catch (e) { return false; } }
+
+function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
+
+var Firewall = /*#__PURE__*/function (_DeviceNode) {
+  _inherits(Firewall, _DeviceNode);
+
+  var _super = _createSuper(Firewall);
+
+  function Firewall(props) {
+    var _this;
+
+    _classCallCheck(this, Firewall);
+
+    _this = _super.call(this, props);
+    console.log(_.default);
+    return _this;
+  }
+
+  _createClass(Firewall, [{
+    key: "render",
+    value: function render(ctx) {
+      var x = this.x,
+          y = this.y,
+          width = this.width,
+          height = this.height,
+          imageWidth = this.imageWidth,
+          imageHeight = this.imageHeight,
+          name = this.name,
+          info = this.info;
+      var textTop = y + imageHeight + 10;
+      var img = document.createElement("img");
+      img.src = _.default.concentrator;
+
+      img.onload = function () {
+        ctx.drawImage(img, x, y, imageWidth, imageHeight);
+        ctx.font = "12px serif";
+        ctx.fillText(name, x, textTop);
+        ctx.fillText(info, x, textTop + 10 + 12);
+      };
+    }
+  }]);
+
+  return Firewall;
+}(_DeviceNode2.default);
+
+exports.default = Firewall;
+},{"../nodes/DeviceNode":"src/nodes/DeviceNode.js","../assets/images/*.png":"src/assets/images/*.png"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _DeviceNode = _interopRequireDefault(require("./src/nodes/DeviceNode"));
@@ -289,6 +388,8 @@ var _DeviceNode = _interopRequireDefault(require("./src/nodes/DeviceNode"));
 var _Transform = _interopRequireDefault(require("./src/core/Transform"));
 
 var _hoverCheck = _interopRequireDefault(require("./src/utils/hoverCheck"));
+
+var _Firewall = _interopRequireDefault(require("./src/components/Firewall"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -340,7 +441,9 @@ var StarTopo = /*#__PURE__*/function () {
     value: function render() {
       var nodes = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.nodes;
       var canvas = this.el;
-      var ctx = canvas.getContext("2d");
+      var ctx = canvas.getContext("2d", {
+        alpha: true
+      });
 
       var _iterator = _createForOfIteratorHelper(nodes),
           _step;
@@ -381,8 +484,26 @@ topo.addNode(new _DeviceNode.default({
   width: 220,
   height: 30
 }));
+topo.addNode(new _Firewall.default({
+  id: "firewall",
+  x: 300,
+  y: 80,
+  width: 80,
+  height: 100,
+  name: "防火墙",
+  info: "10.0.0.25"
+}));
+topo.addNode(new _Firewall.default({
+  id: "firewall",
+  x: 300,
+  y: 180,
+  width: 80,
+  height: 100,
+  name: "防火墙sfdfsdfsdf阿三大苏打",
+  info: "10.0.0.25犯得上发射点发射点犯得上"
+}));
 topo.render();
-},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js","./src/core/Transform":"src/core/Transform.js","./src/utils/hoverCheck":"src/utils/hoverCheck.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./src/nodes/DeviceNode":"src/nodes/DeviceNode.js","./src/core/Transform":"src/core/Transform.js","./src/utils/hoverCheck":"src/utils/hoverCheck.js","./src/components/Firewall":"src/components/Firewall.js"}],"C:/Users/admin/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
